@@ -1,0 +1,413 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - LostNoMore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
+  <link href="{% static 'css/lostnomore.css' %}" rel="stylesheet"/>
+  <style>
+    .dash-sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:var(--dark-card);border-right:1px solid var(--border-color);z-index:1001;padding-top:1.5rem;transition:transform var(--transition-base);display:flex;flex-direction:column;}
+    .dash-main{margin-left:260px;min-height:100vh;display:flex;flex-direction:column;}
+    .dash-topbar{position:sticky;top:0;z-index:999;background:rgba(15,23,42,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border-color);padding:0.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .sidebar-link{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1.25rem;color:var(--text-secondary);text-decoration:none;font-weight:500;font-size:0.9rem;border-radius:var(--radius-sm);margin:0.15rem 0.75rem;transition:all var(--transition-fast);}
+    .sidebar-link:hover,.sidebar-link.active{background:rgba(99,102,241,0.1);color:var(--text-primary);}
+    .sidebar-link.active{border-left:3px solid var(--primary);color:var(--primary-light);}
+    .sidebar-link i{width:20px;text-align:center;font-size:1rem;}
+    .sidebar-section{font-size:0.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;padding:1rem 1.25rem 0.4rem;margin-top:0.5rem;}
+    .carousel-dash{border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border-color);}
+    .carousel-dash .carousel-item img{height:380px;object-fit:cover;filter:brightness(0.65);}
+    .carousel-dash .carousel-caption{background:rgba(15,23,42,0.7);backdrop-filter:blur(8px);border-radius:var(--radius-md);padding:1rem 1.5rem;bottom:1.5rem;left:1.5rem;right:auto;text-align:left;}
+    .action-card{position:relative;overflow:hidden;border-radius:var(--radius-lg);border:1px solid var(--border-color);transition:all var(--transition-base);background:var(--dark-card);}
+    .action-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,0.3);}
+    .action-card img{width:100%;height:180px;object-fit:cover;transition:transform var(--transition-slow);}
+    .action-card:hover img{transform:scale(1.05);}
+    .action-card .card-overlay{position:absolute;bottom:0;left:0;right:0;padding:1.5rem;background:linear-gradient(transparent,rgba(15,23,42,0.95));}
+    @media(max-width:991px){.dash-sidebar{transform:translateX(-100%);}.dash-sidebar.open{transform:translateX(0);}.dash-main{margin-left:0;}}
+  </style>
+</head>
+<body class="lnm-gradient-bg">
+
+  <!-- Sidebar -->
+  <aside class="dash-sidebar" id="sidebar">
+    <div class="px-4 mb-4">
+      <a class="lnm-brand" href="{% url 'index' %}">
+        <span class="brand-lost">Lost</span><span class="brand-no">No</span><span class="brand-more">More</span>
+      </a>
+    </div>
+    <div class="sidebar-section">Main</div>
+    <a href="{% url 'dashboard' %}" class="sidebar-link active"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="{% url 'gallery' %}" class="sidebar-link"><i class="fas fa-images"></i> Gallery</a>
+    <a href="{% url 'search' %}" class="sidebar-link"><i class="fas fa-search"></i> Search Items</a>
+    <a href="#report-lost" class="sidebar-link"><i class="fas fa-exclamation-circle"></i> Report Lost</a>
+    <a href="#report-found" class="sidebar-link"><i class="fas fa-check-circle"></i> Report Found</a>
+    <div class="sidebar-section">Account</div>
+    <a href="{% url 'profile' %}" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+    <a href="{% url 'contact' %}" class="sidebar-link"><i class="fas fa-envelope"></i> Claim Item</a>
+    <div style="flex:1;"></div>
+    <div style="padding:0.75rem;">
+      <a href="{% url 'logout' %}" class="sidebar-link" style="color:var(--danger-light);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dash-main">
+
+    <!-- Top bar -->
+    <div class="dash-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="d-lg-none btn btn-sm" id="sidebar-toggle" style="color:var(--text-primary);background:none;border:none;font-size:1.2rem;"><i class="fas fa-bars"></i></button>
+        <h5 class="mb-0" style="font-weight:700;font-size:1.1rem;">Dashboard</h5>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'profile' %}" style="color:var(--text-secondary);font-size:1.2rem;transition:color 0.2s;" onmouseover="this.style.color='#818cf8'" onmouseout="this.style.color='var(--text-secondary)'">
+          <i class="fas fa-user-circle"></i>
+        </a>
+        <a href="{% url 'logout' %}" style="color:var(--text-secondary);font-size:1.2rem;transition:color 0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-secondary)'">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="p-3 p-md-4" style="flex:1;">
+
+      <!-- Alerts -->
+      {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      <!-- Hero area -->
+      <div class="glass-card p-4 p-md-5 mb-4" data-aos="fade-up">
+        <div class="row align-items-center">
+          <div class="col-md-7">
+            <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.75rem;">Find Your Lost Items <span class="text-gradient">Faster</span></h1>
+            <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem;">
+              LostNoMore is a cutting-edge platform designed to help you find and report lost items quickly and efficiently. Our intuitive interface connects individuals who have lost belongings with those who have found them.
+            </p>
+            <a href="#services" class="btn-accent-glow"><i class="fas fa-bolt me-1"></i> Explore Services</a>
+          </div>
+          <div class="col-md-5 text-center mt-4 mt-md-0">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdntMKppjNgpAf1wWnJrIvwIEd-cCRzmTg9w&s"
+                 alt="Lost items" class="img-fluid anim-float" style="max-width:320px;border-radius:var(--radius-lg);border:1px solid var(--border-color);"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carousel -->
+      <div class="carousel-dash mb-4" data-aos="fade-up" data-aos-delay="100">
+        <div id="dashCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <img src="https://storage.googleapis.com/a1aa/image/wKpcgqMfUpmpJEIgerprdzRvxMWlUnjefW2k6wGXhI0.jpg" class="d-block w-100" alt="Lost wallet">
+              <div class="carousel-caption"><h5 class="mb-1" style="font-weight:700;">Lost Wallet</h5><p class="mb-0" style="font-size:0.85rem;opacity:0.9;">Have you lost your wallet? Report it here and find it quickly.</p></div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://storage.googleapis.com/a1aa/image/Jbx9mTZ4YRhYhDL6Zj2D18xJ2fVPJkmxgPbQGg_t1ZU.jpg" class="d-block w-100" alt="Lost keys">
+              <div class="carousel-caption"><h5 class="mb-1" style="font-weight:700;">Lost Keys</h5><p class="mb-0" style="font-size:0.85rem;opacity:0.9;">Lost your keys? Report it here and get them back.</p></div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://storage.googleapis.com/a1aa/image/79BUwhlAhfwaFo_91TO7IKnwb9oP_saxwGFFUMT4Uyk.jpg" class="d-block w-100" alt="Lost phone">
+              <div class="carousel-caption"><h5 class="mb-1" style="font-weight:700;">Lost Phone</h5><p class="mb-0" style="font-size:0.85rem;opacity:0.9;">Lost your phone? Report it here and find it quickly.</p></div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://storage.googleapis.com/a1aa/image/epzijZ9sGGMkFpDxfjhOHtbNRPjTD_qwVsP8ICki5XU.jpg" class="d-block w-100" alt="Lost backpack">
+              <div class="carousel-caption"><h5 class="mb-1" style="font-weight:700;">Lost Backpack</h5><p class="mb-0" style="font-size:0.85rem;opacity:0.9;">Lost your backpack? Report it here and find it quickly.</p></div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://storage.googleapis.com/a1aa/image/L88nFny8YsecDhZ6eKmOhturwGtH0P5fpKZ4Tp6jQvs.jpg" class="d-block w-100" alt="Lost sunglasses">
+              <div class="carousel-caption"><h5 class="mb-1" style="font-weight:700;">Lost Sunglasses</h5><p class="mb-0" style="font-size:0.85rem;opacity:0.9;">Lost your sunglasses? Report it here and find them.</p></div>
+            </div>
+            <div class="carousel-item">
+              <img src="https://storage.googleapis.com/a1aa/image/4p7Pt9MHyd0Quiz1PzOjfMpLlfwwdZnMIvVzfsCQflw.jpg" class="d-block w-100" alt="Lost pet">
+              <div class="carousel-caption"><h5 class="mb-1" style="font-weight:700;">Lost Pet</h5><p class="mb-0" style="font-size:0.85rem;opacity:0.9;">Lost your pet? Report it here and find it quickly.</p></div>
+            </div>
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#dashCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+          <button class="carousel-control-next" type="button" data-bs-target="#dashCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+        </div>
+      </div>
+
+      <!-- Take Action -->
+      <h3 class="mb-3" style="font-weight:700;" data-aos="fade-up">Take Action</h3>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="action-card">
+            <div style="overflow:hidden;">
+              <img src="https://epe.brightspotcdn.com/dims4/default/3ca9b85/2147483647/strip/true/crop/3000x2036+0+207/resize/840x570!/quality/90/?url=https%3A%2F%2Fepe-brightspot.s3.us-east-1.amazonaws.com%2F88%2Faa%2F78c6a838470a8bc0c17fdc991b9a%2Flost-and-found-052024-184983587.jpg" alt="Report Lost">
+            </div>
+            <div class="card-overlay">
+              <a href="#report-lost" class="btn-danger-glow" style="font-size:0.9rem;padding:0.6rem 1.25rem;"><i class="fas fa-exclamation-circle me-1"></i> Report Lost Item</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="action-card">
+            <div style="overflow:hidden;">
+              <img src="https://www.bates.edu/news/files/2018/11/7-crop-square-181113-lost-and-found_2230.jpg" alt="Report Found">
+            </div>
+            <div class="card-overlay">
+              <a href="#report-found" class="btn-success-glow" style="font-size:0.9rem;padding:0.6rem 1.25rem;"><i class="fas fa-check-circle me-1"></i> Report Found Item</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <section id="services" class="mb-4" data-aos="fade-up">
+        <h3 class="mb-3" style="font-weight:700;">Our Services</h3>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="service-card h-100">
+              <div class="service-icon" style="background:rgba(99,102,241,0.12);color:#818cf8;"><i class="fas fa-search"></i></div>
+              <h3>Search Lost Items</h3>
+              <p>Easily search for lost items reported by others. Our filters make locating items fast and simple.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="service-card h-100">
+              <div class="service-icon" style="background:rgba(16,185,129,0.12);color:#34d399;"><i class="fas fa-bullhorn"></i></div>
+              <h3>Report Found Items</h3>
+              <p>Report items you have found to help others reclaim their belongings quickly and efficiently.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="service-card h-100">
+              <div class="service-icon" style="background:rgba(245,158,11,0.12);color:#fbbf24;"><i class="fas fa-shield-alt"></i></div>
+              <h3>Secure & Private</h3>
+              <p>Your information is secure with our trusted platform. Data protection is our top priority.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search CTA -->
+      <div class="glass-card p-4 p-md-5 mb-4 text-center" data-aos="fade-up">
+        <h3 style="font-weight:700;margin-bottom:0.5rem;">Search Your Items</h3>
+        <p style="color:var(--text-secondary);max-width:600px;margin:0 auto 1.5rem;line-height:1.6;">Our search tool helps you find lost items quickly. Filter by category, date, location, and status.</p>
+        <a href="{% url 'search' %}" class="btn-accent-glow"><i class="fas fa-search me-1"></i> Search Now</a>
+      </div>
+
+      <!-- Alert Overlay -->
+      <div id="alertBox" class="lnm-alert-overlay" style="display:none;">
+        <div class="lnm-alert-box">
+          <div style="width:48px;height:48px;border-radius:50%;background:rgba(16,185,129,0.15);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+            <i class="fas fa-check" style="color:var(--success);font-size:1.2rem;"></i>
+          </div>
+          <p id="alertMessage" style="font-size:1rem;margin-bottom:1.5rem;">Your form has been submitted successfully!</p>
+          <button class="btn-primary-glow" onclick="closeAlert()">Close</button>
+        </div>
+      </div>
+
+      <!-- Report Lost Item -->
+      <section id="report-lost" class="mb-4" data-aos="fade-up">
+        <div class="glass-card p-4 p-md-5">
+          <div class="text-center mb-4">
+            <div style="width:56px;height:56px;border-radius:12px;background:rgba(239,68,68,0.15);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
+              <i class="fas fa-exclamation-triangle" style="font-size:1.3rem;color:var(--danger-light);"></i>
+            </div>
+            <h3 style="font-weight:700;">Report Lost Item</h3>
+            <p style="color:var(--text-secondary);">Fill in the details below to report a lost item</p>
+          </div>
+          <form enctype="multipart/form-data" method="POST" action="{% url 'report_lost' %}" onsubmit="return handleSubmit(event)" data-status="lost" style="max-width:600px;margin:0 auto;">
+            {% csrf_token %}
+            <div class="lnm-input-group">
+              <label class="lnm-form-label">Item Name</label>
+              <div class="position-relative"><span class="input-icon"><i class="fas fa-tag"></i></span>
+              <input class="lnm-form-control" name="name" required type="text" placeholder="What did you lose?"/></div>
+            </div>
+            <div class="lnm-input-group">
+              <label class="lnm-form-label">Description</label>
+              <textarea class="lnm-form-control" name="description" required rows="3" placeholder="Describe the item in detail..." style="padding-left:1rem;"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="lnm-input-group">
+                  <label class="lnm-form-label">Category</label>
+                  <div class="position-relative"><span class="input-icon"><i class="fas fa-layer-group"></i></span>
+                  <select class="lnm-form-control" name="category" required>
+                    <option value="electronics">Electronics</option>
+                    <option value="stationary">Stationary</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="jewelry">Jewelry</option>
+                    <option value="documents">Documents</option>
+                    <option value="pets">Pets</option>
+                    <option value="toys">Toys</option>
+                    <option value="tools">Tools</option>
+                    <option value="sports">Sports Equipment</option>
+                    <option value="others">Others</option>
+                  </select></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="lnm-input-group">
+                  <label class="lnm-form-label">Date Lost</label>
+                  <div class="position-relative"><span class="input-icon"><i class="fas fa-calendar-alt"></i></span>
+                  <input class="lnm-form-control" name="date_string" required type="date"/></div>
+                </div>
+              </div>
+            </div>
+            <div class="lnm-input-group">
+              <label class="lnm-form-label">Location</label>
+              <div class="position-relative"><span class="input-icon"><i class="fas fa-map-marker-alt"></i></span>
+              <input class="lnm-form-control" name="location" required type="text" placeholder="Where did you lose it?"/></div>
+            </div>
+            <div class="mb-3">
+              <label class="lnm-form-label">Upload Image</label>
+              <input class="lnm-form-control" name="image" required type="file" style="padding-left:1rem;"/>
+              <img class="img-preview mt-2" style="display:none;max-height:150px;border-radius:var(--radius-sm);"/>
+            </div>
+            <button class="btn-danger-glow w-100 justify-content-center" type="submit" style="padding:0.85rem;"><i class="fas fa-paper-plane me-1"></i> Submit Report</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Report Found Item -->
+      <section id="report-found" class="mb-4" data-aos="fade-up">
+        <div class="glass-card p-4 p-md-5">
+          <div class="text-center mb-4">
+            <div style="width:56px;height:56px;border-radius:12px;background:rgba(16,185,129,0.15);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
+              <i class="fas fa-check-circle" style="font-size:1.3rem;color:var(--success-light);"></i>
+            </div>
+            <h3 style="font-weight:700;">Report Found Item</h3>
+            <p style="color:var(--text-secondary);">Help reunite items with their rightful owners</p>
+          </div>
+          <form enctype="multipart/form-data" method="POST" action="{% url 'report_found' %}" onsubmit="return handleSubmit(event)" style="max-width:600px;margin:0 auto;">
+            {% csrf_token %}
+            <div class="lnm-input-group">
+              <label class="lnm-form-label">Item Name</label>
+              <div class="position-relative"><span class="input-icon"><i class="fas fa-tag"></i></span>
+              <input class="lnm-form-control" name="name" required type="text" placeholder="What did you find?"/></div>
+            </div>
+            <div class="lnm-input-group">
+              <label class="lnm-form-label">Description</label>
+              <textarea class="lnm-form-control" name="description" required rows="3" placeholder="Describe the item in detail..." style="padding-left:1rem;"></textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="lnm-input-group">
+                  <label class="lnm-form-label">Category</label>
+                  <div class="position-relative"><span class="input-icon"><i class="fas fa-layer-group"></i></span>
+                  <select class="lnm-form-control" name="category" required>
+                    <option value="electronics">Electronics</option>
+                    <option value="stationary">Stationary</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="jewelry">Jewelry</option>
+                    <option value="documents">Documents</option>
+                    <option value="pets">Pets</option>
+                    <option value="toys">Toys</option>
+                    <option value="tools">Tools</option>
+                    <option value="sports">Sports Equipment</option>
+                    <option value="others">Others</option>
+                  </select></div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="lnm-input-group">
+                  <label class="lnm-form-label">Date Found</label>
+                  <div class="position-relative"><span class="input-icon"><i class="fas fa-calendar-alt"></i></span>
+                  <input class="lnm-form-control" name="date_string" required type="date"/></div>
+                </div>
+              </div>
+            </div>
+            <div class="lnm-input-group">
+              <label class="lnm-form-label">Location</label>
+              <div class="position-relative"><span class="input-icon"><i class="fas fa-map-marker-alt"></i></span>
+              <input class="lnm-form-control" name="location" required type="text" placeholder="Where did you find it?"/></div>
+            </div>
+            <div class="mb-3">
+              <label class="lnm-form-label">Upload Image</label>
+              <input class="lnm-form-control" name="image" required type="file" style="padding-left:1rem;"/>
+              <img class="img-preview mt-2" style="display:none;max-height:150px;border-radius:var(--radius-sm);"/>
+            </div>
+            <button class="btn-success-glow w-100 justify-content-center" type="submit" style="padding:0.85rem;"><i class="fas fa-paper-plane me-1"></i> Submit Report</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Gallery CTA -->
+      <div class="glass-card p-4 p-md-5 text-center mb-4" data-aos="fade-up">
+        <h3 style="font-weight:700;margin-bottom:0.5rem;">Lost and Found Gallery</h3>
+        <p style="color:var(--text-secondary);max-width:600px;margin:0 auto 1.5rem;">Explore our collection of lost and found items. Our gallery is regularly updated with new items.</p>
+        <a href="{% url 'gallery' %}" class="btn-primary-glow"><i class="fas fa-images me-1"></i> Go to Gallery</a>
+      </div>
+
+    </div><!-- end p-4 -->
+
+    <!-- Footer -->
+    <footer class="lnm-footer">
+      <div class="container text-center">
+        <div class="footer-social mb-3">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+        <p>&copy; 2025 LostNoMore. All rights reserved.</p>
+      </div>
+    </footer>
+
+  </div><!-- end dash-main -->
+
+  <!-- Chatbot Widget -->
+  <button id="chat-icon"><i class="fas fa-comment-dots"></i></button>
+  <div id="chat-box">
+    <div class="chat-header"><i class="fas fa-robot me-2"></i> LostNoMore Assistant</div>
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <input type="text" id="user-input" placeholder="Ask me anything..."/>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script src="{% static 'js/lostnomore.js' %}"></script>
+  <script>AOS.init({duration:700,once:true,offset:60});</script>
+
+  <script>
+    // Sidebar toggle
+    document.getElementById('sidebar-toggle')?.addEventListener('click',function(){document.getElementById('sidebar').classList.toggle('open');});
+
+    // Report form submit
+    function handleSubmit(event){
+      event.preventDefault();
+      var form=event.target;var formData=new FormData(form);
+      fetch(form.action,{method:form.method,body:formData})
+      .then(function(r){return r.json();})
+      .then(function(){showAlert("Your report has been submitted successfully!","success");form.reset();})
+      .catch(function(){showAlert("Your report has been submitted successfully!","success");form.reset();});
+    }
+    function showAlert(msg){
+      document.getElementById("alertMessage").innerText=msg;
+      document.getElementById("alertBox").style.display="flex";
+    }
+    function closeAlert(){document.getElementById("alertBox").style.display="none";}
+
+    // Chatbot
+    var chatIcon=document.getElementById('chat-icon');var chatBox=document.getElementById('chat-box');
+    chatIcon.onclick=function(){chatBox.style.display=chatBox.style.display==='none'||chatBox.style.display===''?'flex':'none';};
+    function sendMessage(){
+      var userText=document.getElementById('user-input').value.trim();if(!userText)return;
+      appendMessage('You',userText);document.getElementById('user-input').value='';
+      fetch('/chatbot/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({message:userText})})
+      .then(function(r){return r.json();}).then(function(d){appendMessage('Bot',d.response,true);})
+      .catch(function(){appendMessage('Bot','Oops! Something went wrong.');});
+    }
+    function appendMessage(s,t){var d=document.createElement('div');d.style.marginBottom='0.75rem';d.innerHTML='<strong>'+s+':</strong><br>'+t;document.getElementById('chat-messages').appendChild(d);document.getElementById('chat-messages').scrollTop=999999;}
+    function getCookie(n){var v=null;if(document.cookie){document.cookie.split(';').forEach(function(c){c=c.trim();if(c.startsWith(n+'=')){v=decodeURIComponent(c.substring(n.length+1));}});};return v;}
+  </script>
+</body>
+</html>
