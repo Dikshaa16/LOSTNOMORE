@@ -104,19 +104,18 @@ mail = Mail(app)
 with app.app_context():
     db.create_all()
 
-    # Always remove existing admin user (if any)
+    # Only create admin user if it doesn't exist (production-safe)
     existing_admin = User.query.filter_by(email="diksha@gmail.com", role="admin").first()
-    if existing_admin:
-        db.session.delete(existing_admin)
+    if not existing_admin:
+        # Create admin user only on first deployment
+        admin_user = User(name="diksha", email="diksha@gmail.com",
+                          mobile="9478622626", role="admin")
+        admin_user.set_password("Diksha@123")
+        db.session.add(admin_user)
         db.session.commit()
-
-    # Create and commit a fresh admin user
-    admin_user = User(name="diksha", email="diksha@gmail.com",
-                      mobile="9478622626", role="admin")
-    admin_user.set_password("Diksha@123")
-    db.session.add(admin_user)
-    db.session.commit()
-    print("✅ Admin user recreated.")
+        print("✅ Admin user created.")
+    else:
+        print("✅ Admin user already exists.")
 
         
         
@@ -662,4 +661,6 @@ migrate = Migrate(app, db)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use environment variable for port (required for Render)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
